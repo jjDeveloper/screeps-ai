@@ -1,0 +1,145 @@
+global.movementPaths = require('movement.paths');
+global.testScript = require('test.script');
+
+const SPAWNS = ['SpawnOne'] 
+
+var director = require('director');
+
+var roleHarvester = require('role.harvester');
+var roleUpgrader = require('role.upgrader');
+var roleBuilder = require('role.builder');
+var creepsRefresh = require('creeps.refresh');
+var customRoad = require('custom.road');
+var roleRepairer = require('role.repairer');
+// var popControl = require('pop.control');
+
+var cityWorks = require('city.works');
+
+module.exports.loop = function() {
+
+    // cityWorks.sourceInfrastructure(Game.spawns[SPAWN[0]])
+    // console.log(JSON.stringify(
+    //   //Memory.requiredCreeps
+    // ));
+
+    //console.log(Game.spawns);
+    if(!Game.spawns){
+     
+      var tow = Game.spawns[SPAWNS[0]].room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return (structure.structureType == STRUCTURE_TOWER)
+        }
+    });
+     var tower = tow[0];
+     var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+       filter: (structure) => structure.hits < structure.hitsMax
+     });
+     if(tower) {
+       var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+         filter: (structure) => structure.hits < structure.hitsMax
+       });
+       if(closestDamagedStructure) {
+         tower.repair(closestDamagedStructure);
+       }
+
+       var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+       if(closestHostile) {
+         tower.attack(closestHostile);
+       }
+     }
+    // if(tower) {
+    //     var closestDamagedStructure = tower.pos.find(FIND_STRUCTURES, {
+    //         filter: (structure) => structure.hits < structure.hitsMax
+    //     });
+    //     if(closestDamagedStructure) {
+    //         tower.repair(closestDamagedStructure);
+    //     }
+    //
+    //     var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+    //     if(closestHostile) {
+    //         tower.attack(closestHostile);
+    //     }
+    // }
+    // var thisWalls = testScript.findWalls(Game.spawns[SPAWN[0]]);
+    // var thisRoads = roleRepairer.run();
+    //
+    // console.log( JSON.stringify(
+    //   popControl.harvesters()
+    // ));
+
+
+    //if(Game.rooms[Game.spawns[SPAWN[0]].pos.roomName].controller.level == 3) {
+    //     Game.rooms[Game.spawns[SPAWN[0]].pos.roomName].createConstructionSite(42,32, STRUCTURE_TOWER);
+    // }
+    //for(var i = 23; i < 29; ++i ){
+    //  Game.rooms[Game.spawns[SPAWN[0]].pos.roomName].createConstructionSite(17, i, STRUCTURE_WALL);
+    //}
+    var repairers= _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer');
+    // console.log('builder: ' + builders.length);
+
+    if(repairers.length < 2) {
+        var newName = Game.spawns[SPAWN[0]].createCreep([WORK,CARRY,CARRY,MOVE,MOVE], undefined, {role: 'repairer', refresh: false, repairing: false});
+        console.log('Spawning new repairer: ' + newName);
+    }
+
+    var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
+    // console.log('Upgraders: ' + upgraders.length);
+
+    if(upgraders.length < 2) {
+        var newName = Game.spawns[SPAWN[0]].createCreep([WORK,WORK,CARRY,CARRY,MOVE], undefined, {role: 'upgrader', refresh: false});
+        console.log('Spawning new upgrader: ' + newName);
+    }
+
+    var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
+    // console.log('builder: ' + builders.length);
+
+    if(builders.length < 1) {
+        var newName = Game.spawns[SPAWN[0]].createCreep([WORK,CARRY,CARRY,MOVE,MOVE], undefined, {role: 'builder', refresh: false, building: false});
+        console.log('Spawning new builder: ' + newName);
+    }
+
+    var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
+    // console.log('Harvesters: ' + harvesters.length);
+
+    if(harvesters.length < 3) {
+        var newName = Game.spawns[SPAWN[0]].createCreep([WORK,WORK,CARRY,CARRY,MOVE], undefined, {role: 'harvester', refresh: false});
+        console.log('Spawning new harvester: ' + newName);
+    }
+
+
+    if(Game.spawns[SPAWN[0]].energy == Game.spawns[SPAWN[0]].energyCapacity){
+       // Game.spawns[SPAWN[0]].createCreep([WORK, MOVE, CARRY], undefined, { role: 'builder', refresh: false});
+    }
+
+    for(var name in Memory.creeps) {
+        if(!Game.creeps[name]) {
+            delete Memory.creeps[name];
+            console.log('Clearing non-existing creep memory:', name);
+        }
+    }
+    for(var name in Game.creeps) {
+        var creep = Game.creeps[name];
+        //creepsRefresh.check(creep);
+        // customRoad.run(creep);
+
+        if(creep.memory.refresh == false) {
+            if(creep.memory.role == 'harvester') {
+                roleHarvester.run(creep);
+            }
+            if(creep.memory.role == 'upgrader') {
+                roleUpgrader.run(creep);
+            }
+            if(creep.memory.role == 'builder'){
+                roleBuilder.run(creep);
+            }
+            if(creep.memory.role == 'repairer') {
+              roleRepairer.run(creep);
+            }
+        } else {
+            //creepsRefresh.run(creep);
+        }
+    }
+}
+
+}
+
