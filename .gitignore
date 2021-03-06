@@ -2,3 +2,4 @@ node_modules/
 .screeps.json
 .sw*
 .c9/
+Gruntfile.js

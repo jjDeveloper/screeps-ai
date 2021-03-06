@@ -1,17 +1,25 @@
-var mem = Memory.Logger;
 global.logger = {
   queueMessage: function(sender, message) {
-	  mem.queue.unshift([sender, message])
+      let mem = Memory.Logger.queue;
+	  mem.unshift([sender, message])
+      Memory.Logger.queue = mem;
   },
   clear: function() {
-	  mem.queue = [];
+	  Memory.Logger.queue = [];
   },
   run: function() {
-	  mem.queue.forEach((q) => {
+  let mem = Memory.Logger.queue;
+	  mem.forEach((q) => {
 		  console.log(`'${q[0]}': '${q[1]}'`);
 	  })
   },
   logObject(ob) {
 	  console.log(JSON.stringify(ob));
-  }
+  },
+  stale(n) {
+        const sc = Memory.Logger.staleCount;
+        Memory.Logger.staleCount =  sc + 1;
+        console.log('logger: stale trigger')
+        this.logger.queueMessage('logger', 'Logger stale trigger')
+    }
 }
