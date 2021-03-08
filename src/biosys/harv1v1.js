@@ -1,0 +1,3 @@
+var harvOnevOne = function(creep) {
+
+}
